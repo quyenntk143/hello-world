@@ -1,14 +1,44 @@
-# Day 5 - Challenge option 1
+##### Our most valuable users are the ones who have completed a minimum of 5 VIEWs and 10 CLICKs. What age group do they fall in: 18-49 or 50-80?
+```sql
+WITH valuable_age AS ( SELECT pivot_by_user.user_id,
+                              pivot_by_user.age,
+                              SUM(CASE WHEN pivot_by_user.event_type = "CLICK" THEN pivot_by_user.step ELSE NULL END) AS event_click,
+                              SUM(CASE WHEN pivot_by_user.event_type = "VIEW"  THEN pivot_by_user.step ELSE NULL END) AS event_view,
+                              SUM(CASE WHEN pivot_by_user.event_type = "EXIT"  THEN pivot_by_user.step ELSE NULL END) AS event_exit
+                         FROM 
+                             (SELECT user_interaction.user_id,
+                                     user_interaction.event_type,
+                                     users.age,
+                                     COUNT(1) AS step
+                                FROM user_interaction 
+                                JOIN users 
+                                  ON user_interaction.user_id=users.user_id
+                               GROUP BY 1,2,3) AS pivot_by_user 
+                        GROUP BY 1 )
+SELECT age, 
+       event_click, 
+       event_view
+  FROM valuable_age
+ WHERE event_click >=10 
+   AND event_view >=5
+```
 
-a = int(input("Length of 1st side: "))
-b = int(input("Length of 2nd side: "))
-c = int(input("Length of 3rd side: "))
-if a==b==c:
-    print("Equilateral triangle")
-elif a!=b!=c:
-    print("Scalene triangle")
-else:
-    print("Isosceles triangle")
-    
-
-# Option 1 Difficulty Level: Elementary: A triangle can be classified based on the lengths of its sides as equilateral, isosceles or scalene. All 3 sides of an equilateral triangle have the same length. An isosceles triangle has two sides that are the same length, and a third side that is a different length. If all of the sides have different lengths then the triangle is scalene. Write a program that reads the lengths of 3 sides of a triangle from the user. Display a message indicating the type of the triangle.
+##### We need to identify the first and the last interaction for every day. Show the whole record for the first and last interactions for each day.
+```sql
+WITH first_interaction AS ( SELECT DATE(event_time) AS event_date, 
+                                   MIN(event_time), 
+                                   event_type AS first_interaction
+                              FROM user_interaction 
+                             GROUP BY 1 ),
+      last_interaction AS ( SELECT DATE(event_time) AS event_date, 
+                                   MAX(event_time), 
+                                   event_type AS last_interaction
+                              FROM user_interaction 
+                             GROUP BY 1 )
+SELECT first_interaction.event_date, 
+       first_interaction, 
+       last_interaction
+  FROM first_interaction
+  JOIN last_interaction
+    ON first_interaction.event_date = last_interaction.event_date
+```
