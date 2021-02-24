@@ -42,3 +42,21 @@ SELECT first_interaction.event_date,
   JOIN last_interaction
     ON first_interaction.event_date = last_interaction.event_date
 ```
+##### What country do most of our website visitors come from? 🌐
+```sql
+WITH website_visitor AS (SELECT users.user_id,
+                                users.age,
+                                users.country,
+                                user_interaction.event_id,
+                                user_interaction.event_type,
+                                user_interaction.event_time
+                           FROM user_interaction
+                           JOIN users
+                             ON user_interaction.user_id = users.user_id) 
+SELECT country, 
+       COUNT(user_id)
+  FROM website_visitor
+ GROUP BY 1
+ ORDER BY 2 DESC
+ LIMIT 1
+```
